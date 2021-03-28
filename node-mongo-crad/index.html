@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
+      integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk"
+      crossorigin="anonymous"
+    />
+    <title>Document</title>
+  </head>
+  <body class="container">
+    <h1>Look mom I can create a MongoDB database!!</h1>
+    <form action="/addProduct" method="post">
+      <input type="text" name="name" placeholder="name" /><br />
+      <input type="text" name="price" placeholder="price" /><br />
+      <input type="text" name="quantity" placeholder="quantity" /><br />
+      <button type="submit" class="btn btn-primary">Add Product</button>
+    </form>
+    <div id="products"></div>
+    <div id="update"></div>
+    <script>
+      function loadAllProducts() {
+        fetch("/products")
+        .then((response) => response.json())
+        .then((products) => {
+          const container = document.getElementById("products");
+          container.innerHTML = '';
+          products.forEach((pd) => {
+            const p = document.createElement("p");
+            p.innerHTML = `<strong>Name: </strong>${pd.name}, <strong>Price: </strong>${pd.price}, <strong>Quantity: </strong>${pd.quantity}
+            <button type="submit" class="btn btn-success" onclick="loadProduct('${pd._id}')">Update</button>
+            <button type="submit" class="btn btn-danger" onclick="deleteProduct(event, '${pd._id}')"><i class="fas fa-trash"></i></button>`;
+            container.appendChild(p);
+          });
+        });
+      }
+      loadAllProducts();
+
+      function loadProduct(id){
+        fetch(`product/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          const update = document.getElementById('update');
+          update.innerHTML = `
+            <h3>Update: ${data._id}</h3>
+            Price: <input type="text" value="${data.price}" id="price"/><br/>
+            Quantity: <input type="text" value="${data.quantity}" id="quantity"/><br/>
+            <button type="submit" class="btn btn-secondary" onclick="updateProduct('${data._id}')">Submit</button>
+          `;
+        })
+      }
+
+      function updateProduct (id){
+        const price = document.getElementById('price').value;
+        const quantity = document.getElementById('quantity').value;
+        const product = {id, price, quantity};
+        fetch(`/update/${id}`, {
+          method: "PATCH",
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(product)
+        })
+        .then(res => res.json())
+        .then(result =>{
+          if(result){
+            loadAllProducts();
+            document.getElementById('update').innerHTML = '';
+          }
+        })
+      }
+
+
+      function deleteProduct(event, id) {
+        fetch(`/delete/${id}`, {
+          method: "DELETE",
+        })
+          .then((response) => response.json())
+          .then((result) => {
+            if(result){
+              event.target.parentNode.style.display = 'none';
+            }
+          });
+      }
+    </script>
+  </body>
+</html>
